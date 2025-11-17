@@ -7,3 +7,6 @@ __pycache__/
 *.parquet
 .env
 venv
+.docs/
+docs/
+data/
