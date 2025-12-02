@@ -3,6 +3,7 @@ Módulo de limpieza y normalización de texto conversacional.
 """
 import re
 from typing import Optional
+from .config import TextProcessingConfig
 
 
 class TextCleaner:
@@ -80,6 +81,25 @@ class TextCleaner:
         return text
     
     @staticmethod
+    def clean_urls(text: str) -> str:
+        """
+        Limpia URLs del texto, dejando solo el dominio.
+        
+        Args:
+            text: Texto con URLs
+            
+        Returns:
+            Texto sin URLs completas
+        """
+        if not text:
+            return ""
+        
+        url_pattern = r'https?://[^\s]+'
+        text = re.sub(url_pattern, '', text)
+        
+        return text
+    
+    @staticmethod
     def clean_conversation(conversation: str) -> str:
         """
         Limpia una conversación completa aplicando todas las transformaciones.
@@ -93,20 +113,27 @@ class TextCleaner:
         if not conversation:
             return ""
         
-        cleaned = TextCleaner.clean_html_entities(conversation)
+        cleaned = conversation
         
-        cleaned = TextCleaner.normalize_whitespace(cleaned)
+        if TextProcessingConfig.CLEAN_HTML_ENTITIES:
+            cleaned = TextCleaner.clean_html_entities(cleaned)
+        
+        if TextProcessingConfig.CLEAN_URLS:
+            cleaned = TextCleaner.clean_urls(cleaned)
+        
+        if TextProcessingConfig.NORMALIZE_WHITESPACE:
+            cleaned = TextCleaner.normalize_whitespace(cleaned)
         
         return cleaned
     
     @staticmethod
-    def truncate_if_needed(text: str, max_length: int = 100000) -> str:
+    def truncate_if_needed(text: str, max_length: Optional[int] = None) -> str:
         """
         Trunca texto si excede longitud máxima (para evitar límites de API).
         
         Args:
             text: Texto a truncar
-            max_length: Longitud máxima permitida
+            max_length: Longitud máxima permitida 
             
         Returns:
             Texto truncado si es necesario
@@ -114,12 +141,14 @@ class TextCleaner:
         if not text:
             return ""
         
+        max_length = max_length or TextProcessingConfig.MAX_CONVERSATION_LENGTH
+        
         if len(text) > max_length:
             truncated = text[:max_length]
             last_space = truncated.rfind(' ')
             if last_space > 0:
                 truncated = truncated[:last_space]
-            return truncated + "\n\n[... conversación truncada por longitud ...]"
+            return truncated + TextProcessingConfig.TRUNCATE_MESSAGE
         
         return text
 

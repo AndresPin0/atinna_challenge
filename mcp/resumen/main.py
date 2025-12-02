@@ -1,30 +1,26 @@
 """
 FastAPI application para el MCP de resumen conversacional.
 """
-import os
-from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from dotenv import load_dotenv
 
 from .service import ResumenService
 from .schemas import ResumenRequest, ResumenResponse, ErrorResponse
+from .config import ServiceConfig, GeminiConfig
 
-load_dotenv()
+try:
+    ServiceConfig.validate()
+except (ValueError, FileNotFoundError) as e:
+    print(f"Error de configuración: {e}")
 
 app = FastAPI(
-    title="MCP Resumen Conversacional",
+    title=ServiceConfig.SERVICE_NAME,
     description="Microservicio para generar resúmenes ejecutivos de conversaciones digitales",
-    version="1.0.0"
-)
-
-PARQUET_PATH = os.getenv(
-    'PARQUET_PATH',
-    str(Path(__file__).parent.parent.parent / 'data' / 'clean' / 'Reto_data_20251023_122206.parquet')
+    version=ServiceConfig.SERVICE_VERSION
 )
 
 try:
-    resumen_service = ResumenService(PARQUET_PATH)
+    resumen_service = ResumenService(ServiceConfig.PARQUET_PATH)
 except Exception as e:
     resumen_service = None
     print(f"Advertencia: No se pudo inicializar el servicio: {e}")
@@ -34,9 +30,9 @@ except Exception as e:
 async def root():
     """Health check endpoint."""
     return {
-        "service": "MCP Resumen Conversacional",
+        "service": ServiceConfig.SERVICE_NAME,
         "status": "running",
-        "version": "1.0.0"
+        "version": ServiceConfig.SERVICE_VERSION
     }
 
 
@@ -49,7 +45,11 @@ async def health():
             content={"status": "unhealthy", "error": "Servicio no inicializado"}
         )
     
-    return {"status": "healthy", "parquet_path": PARQUET_PATH}
+    return {
+        "status": "healthy", 
+        "parquet_path": ServiceConfig.PARQUET_PATH,
+        "model": GeminiConfig.MODEL_NAME
+    }
 
 
 @app.post("/analisis/resumen", response_model=ResumenResponse)
