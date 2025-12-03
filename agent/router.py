@@ -57,11 +57,15 @@ class Router:
             raise ValueError("Decision missing 'tool' key")
         
         # Validate tool name if provided
-        if decision["tool"] and decision["tool"] not in ["mcp_resumen", None]:
+        allowed_tools = ["mcp_resumen", "mcp_sentiment", "mcp_propagation", None]
+        if decision["tool"] not in allowed_tools:
             raise ValueError(f"Unknown tool: {decision['tool']}")
         
-        # Validate arguments if tool is provided
-        if decision["tool"] == "mcp_resumen":
+        # Validate / enrich arguments if tool is provided
+        tool_name = decision["tool"]
+
+        # mcp_resumen: ensure threadId is present, inherit from context if needed
+        if tool_name == "mcp_resumen":
             if not decision.get("arguments") or not decision["arguments"].get("threadId"):
                 # Try to use available threadId from state
                 if available_thread_id:
@@ -70,6 +74,20 @@ class Router:
                     decision["arguments"]["threadId"] = available_thread_id
                 else:
                     raise ValueError("mcp_resumen requires 'threadId' in arguments or in conversation context")
+
+        # mcp_sentiment: try to supply threadId from context if needed
+        if tool_name == "mcp_sentiment":
+            args = decision.get("arguments") or {}
+            if "threadId" not in args and available_thread_id:
+                args["threadId"] = available_thread_id
+            decision["arguments"] = args
+
+        # mcp_propagation: requires at least root_id in arguments
+        if tool_name == "mcp_propagation":
+            args = decision.get("arguments") or {}
+            if "root_id" not in args:
+                raise ValueError("mcp_propagation requires 'root_id' in arguments")
+            decision["arguments"] = args
         
         return decision
 

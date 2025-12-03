@@ -1,5 +1,5 @@
 """Node implementations for the LangGraph."""
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 import httpx
 from .memory import AgentState
 from .router import Router
@@ -11,6 +11,8 @@ from .parquet_Loader import AgentParquetLoader
 
 class AgentNodes:
     """Collection of agent nodes for LangGraph."""
+
+    MAX_SENTIMENT_ITEMS: int = 120
     
     def __init__(self, gemini_client: GeminiClient):
         """
@@ -109,6 +111,174 @@ class AgentNodes:
             raise ValueError(f"Error calling MCP endpoint: {str(e)}")
         except Exception as e:
             raise ValueError(f"Unexpected error in resumen_node: {str(e)}")
+
+    def sentiment_node(self, state: AgentState) -> Dict[str, Any]:
+        """
+        Sentiment node: calls MCP sentiment endpoint.
+
+        Args:
+            state: Current agent state
+
+        Returns:
+            Updated state with mcp_response and tool_used
+        """
+        if not state.tool_decision:
+            raise ValueError("No tool decision available")
+
+        if state.tool_decision["tool"] != "mcp_sentiment":
+            raise ValueError(
+                f"Invalid tool for sentiment_node: {state.tool_decision['tool']}"
+            )
+
+        arguments = dict(state.tool_decision.get("arguments") or {})
+
+        try:
+            payload = self._build_sentiment_payload(arguments, state)
+
+            with httpx.Client(timeout=AgentConfig.REQUEST_TIMEOUT) as client:
+                response = client.post(
+                    AgentConfig.get_mcp_sentiment_url(),
+                    json=payload,
+                )
+                response.raise_for_status()
+                mcp_data = response.json()
+
+                return {
+                    "mcp_response": mcp_data,
+                    "tool_used": "mcp_sentiment",
+                }
+
+        except httpx.HTTPStatusError as e:
+            raise ValueError(f"MCP endpoint error: {e.response.status_code} - {e.response.text}")
+        except httpx.RequestError as e:
+            raise ValueError(f"Error calling MCP endpoint: {str(e)}")
+        except Exception as e:
+            raise ValueError(f"Unexpected error in sentiment_node: {str(e)}")
+
+    def propagation_node(self, state: AgentState) -> Dict[str, Any]:
+        """
+        Propagation node: calls MCP propagation endpoint.
+
+        Args:
+            state: Current agent state
+
+        Returns:
+            Updated state with mcp_response and tool_used
+        """
+        if not state.tool_decision:
+            raise ValueError("No tool decision available")
+
+        if state.tool_decision["tool"] != "mcp_propagation":
+            raise ValueError(
+                f"Invalid tool for propagation_node: {state.tool_decision['tool']}"
+            )
+
+        arguments = dict(state.tool_decision.get("arguments") or {})
+
+        try:
+            # Si no se proporcionan mensajes, construirlos desde el Parquet
+            if "messages" not in arguments or not arguments["messages"]:
+                root_id = arguments.get("root_id")
+                if not root_id:
+                    raise ValueError("mcp_propagation requires 'root_id' in arguments")
+
+                if not self.parquet_loader:
+                    raise ValueError(
+                        "ParquetLoader no está configurado. Configura PARQUET_PATH en variables de entorno."
+                    )
+
+                messages = self.parquet_loader.load_propagation_messages(root_id)
+                arguments["messages"] = messages
+
+            with httpx.Client(timeout=AgentConfig.REQUEST_TIMEOUT) as client:
+                response = client.post(
+                    AgentConfig.get_mcp_propagation_url(),
+                    json=arguments,
+                )
+                response.raise_for_status()
+                mcp_data = response.json()
+
+                return {
+                    "mcp_response": mcp_data,
+                    "tool_used": "mcp_propagation",
+                }
+
+        except httpx.HTTPStatusError as e:
+            raise ValueError(f"MCP endpoint error: {e.response.status_code} - {e.response.text}")
+        except httpx.RequestError as e:
+            raise ValueError(f"Error calling MCP endpoint: {str(e)}")
+        except Exception as e:
+            raise ValueError(f"Unexpected error in propagation_node: {str(e)}")
+
+    def _build_sentiment_payload(
+        self,
+        arguments: Dict[str, Any],
+        state: AgentState,
+    ) -> Dict[str, Any]:
+        """
+        Ensure sentiment requests include the required 'items' payload.
+        """
+        payload = dict(arguments)
+
+        # If caller already provided items, trust them.
+        if payload.get("items"):
+            payload["items"] = payload["items"][-self.MAX_SENTIMENT_ITEMS :]
+            return payload
+
+        thread_id = self._resolve_thread_id(payload.get("threadId"), state)
+
+        if not self.parquet_loader:
+            raise ValueError(
+                "ParquetLoader no está configurado. Configura PARQUET_PATH en variables de entorno."
+            )
+
+        try:
+            messages = self.parquet_loader.load_thread_messages(thread_id)
+        except ValueError as e:
+            raise ValueError(f"Error cargando mensajes desde Parquet: {str(e)}")
+
+        message_ids = payload.get("messageIds")
+        if message_ids:
+            ids_set = set(message_ids)
+            filtered = [msg for msg in messages if msg.get("id") in ids_set]
+        else:
+            filtered = messages
+
+        # keep only most recent subset
+        filtered = filtered[-self.MAX_SENTIMENT_ITEMS :]
+
+        items: List[Dict[str, str]] = []
+        for msg in filtered:
+            text = (msg.get("text") or "").strip()
+            if not text:
+                continue
+            msg_id = str(msg.get("id", ""))
+            if not msg_id:
+                continue
+            items.append({"id": msg_id, "text": text})
+
+        if not items:
+            raise ValueError(
+                "No hay mensajes con texto válido para análisis de sentimiento"
+            )
+
+        payload["threadId"] = thread_id
+        payload["items"] = items
+        return payload
+
+    def _resolve_thread_id(
+        self, requested_thread: Optional[str], state: AgentState
+    ) -> str:
+        """Resolve threadId from arguments or conversational context."""
+        if requested_thread:
+            return requested_thread
+        if state.current_thread_id:
+            return state.current_thread_id
+        if state.last_analysis:
+            return state.last_analysis.thread_id
+        raise ValueError(
+            "Sentiment analysis requires 'threadId' or explicit 'items' in arguments"
+        )
     
     def explain_node(self, state: AgentState) -> Dict[str, Any]:
         """

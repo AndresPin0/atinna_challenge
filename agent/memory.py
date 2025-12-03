@@ -39,6 +39,10 @@ class AgentState(BaseModel):
         default=None,
         description="Decision from router about which tool to use"
     )
+    tool_used: Optional[str] = Field(
+        default=None,
+        description="Name of the MCP tool that was actually invoked in the last step",
+    )
     mcp_response: Optional[Dict[str, Any]] = Field(
         default=None,
         description="Response from MCP service"

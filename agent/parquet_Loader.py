@@ -4,7 +4,7 @@ Loader para cargar mensajes desde Parquet en el agente.
 """
 import pandas as pd
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from .config import AgentConfig
 
 
@@ -71,4 +71,84 @@ class AgentParquetLoader:
             
             messages.append(msg)
         
+        return messages
+
+    def load_propagation_messages(self, root_id: str) -> List[Dict[str, Any]]:
+        """
+        Carga todos los mensajes del thread asociado a un root_id,
+        en el formato esperado por el MCP de propagación.
+        """
+        import math
+
+        df = pd.read_parquet(self.parquet_path)
+
+        row = df[df["id"] == root_id]
+        if row.empty:
+            raise ValueError(f"No existe mensaje con id={root_id} en el dataset")
+        row = row.iloc[0]
+
+        thread_id = row["threadId"]
+        df_thread = df[df["threadId"] == thread_id].copy()
+
+        def epoch_ms_to_iso(value):
+            """Convert epoch milliseconds (possibly as string) to ISO-8601, safely."""
+            if pd.isna(value):
+                return None
+            try:
+                numeric = pd.to_numeric(value, errors="coerce")
+                if pd.isna(numeric):
+                    return None
+                return pd.to_datetime(numeric, unit="ms", utc=True).isoformat()
+            except Exception:
+                return None
+
+        def safe_float(value) -> float:
+            if value is None or (isinstance(value, float) and math.isnan(value)):
+                return 0.0
+            try:
+                return float(value)
+            except Exception:
+                return 0.0
+
+        def parse_bool(value):
+            if isinstance(value, bool):
+                return value
+            if value is None:
+                return None
+            s = str(value).strip().lower()
+            if s in {"true", "1", "t", "yes", "y"}:
+                return True
+            if s in {"false", "0", "f", "no", "n"}:
+                return False
+            return None
+
+        messages: List[Dict[str, Any]] = []
+        for _, r in df_thread.iterrows():
+            author_id = (
+                str(r.get("authorId"))
+                if pd.notna(r.get("authorId")) and str(r.get("authorId")).strip() != ""
+                else None
+            )
+            parent_raw = r.get("parentId")
+            parent_id = (
+                str(parent_raw)
+                if pd.notna(parent_raw) and str(parent_raw).strip() != ""
+                else None
+            )
+
+            messages.append(
+                {
+                    "id": str(r["id"]),
+                    "parentId": parent_id,
+                    "threadId": str(r.get("threadId")) if r.get("threadId") is not None else None,
+                    "authorId": author_id,
+                    "createdAt": epoch_ms_to_iso(r.get("createdAt")),
+                    "text": r.get("text") if pd.notna(r.get("text")) else None,
+                    "isComment": parse_bool(r.get("isComment")) if "isComment" in r else None,
+                    "isRetweet": parse_bool(r.get("isRetweet")) if "isRetweet" in r else None,
+                    "engagementRate": safe_float(r.get("engagementRate")),
+                    "influenceScore": safe_float(r.get("influenceScore")),
+                }
+            )
+
         return messages

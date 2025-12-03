@@ -40,51 +40,104 @@ class GeminiClient:
         """
         history_context = ""
         if conversation_history:
-            history_context = "\n".join([
-                f"Usuario: {msg.get('user', '')}\nAgente: {msg.get('agent', '')}"
-                for msg in conversation_history[-5:]
-            ])
-        
+            history_context = "\n".join(
+                [
+                    f"Usuario: {msg.get('user', '')}\nAgente: {msg.get('agent', '')}"
+                    for msg in conversation_history[-5:]
+                ]
+            )
+
         thread_id_context = ""
         if available_thread_id:
-            thread_id_context = f"\nTHREAD_ID DISPONIBLE EN CONTEXTO: {available_thread_id}\n(Usa este threadId si el usuario no especifica uno diferente)"
-        
-        prompt = f"""Eres un agente inteligente que decide cuándo usar herramientas de análisis.
+            thread_id_context = (
+                f"\nTHREAD_ID DISPONIBLE EN CONTEXTO: {available_thread_id}\n"
+                "(Usa este threadId si el usuario no especifica uno diferente)"
+            )
+
+        prompt = f"""
+Eres un orquestador de herramientas MCP para análisis conversacional en español.
+Debes decidir QUÉ herramienta usar y con QUÉ argumentos.
+
+HERRAMIENTAS DISPONIBLES:
+- mcp_resumen     -> Análisis completo de conversación (resumen ejecutivo, temas clave, posturas, tono, riesgos).
+- mcp_sentiment   -> Análisis de emoción, sentimiento y clima emocional de uno o varios mensajes.
+- mcp_propagation -> Análisis de propagación, engagement y viralidad a partir de un mensaje raíz.
 
 CONTEXTO DE CONVERSACIÓN:
 {history_context if history_context else "Nueva conversación"}
 {thread_id_context}
 
-PREGUNTA DEL USUARIO: {user_query}
+PREGUNTA DEL USUARIO:
+{user_query}
 
-INSTRUCCIONES:
-- Analiza la intención del usuario
-- Si la pregunta requiere análisis de conversación (resumen, clima emocional, temas, narrativa, posturas, riesgos), usa la herramienta mcp_resumen
-- Si la pregunta es general o no requiere análisis, responde directamente (tool = null)
+REGLAS DE DECISIÓN (MUY IMPORTANTES):
+1) Usa mcp_sentiment cuando el foco principal sea:
+   - emociones, sentimientos, clima, tono, polarización emocional
+   - ejemplos: "¿qué sentimiento predomina?", "¿es positivo o negativo?", "¿cuál es el clima de esta conversación?"
 
-PALABRAS CLAVE que indican uso de herramienta:
-- resumen, resumir, resumen ejecutivo
-- clima, ambiente, tono emocional, sentimiento
-- temas, temas clave, de qué hablan
-- narrativa, historia, discusión
-- posturas, opiniones, posiciones
-- riesgos, problemas, alertas
-- análisis, analizar
+2) Usa mcp_propagation cuando el foco principal sea:
+   - propagación, viralidad, difusión, niveles de respuesta, cascadas, engagement
+   - ejemplos: "¿qué tan viral fue este mensaje?", "analiza la propagación de este root", "qué tanta difusión tuvo"
 
-RESPUESTA REQUERIDA (JSON válido):
+3) Usa mcp_resumen cuando el usuario quiera:
+   - un resumen ejecutivo completo
+   - entender de qué trata la conversación, temas clave, posturas, narrativa y riesgos
+
+4) Si la pregunta es general, chit-chat o no requiere análisis profundo,
+   entonces tool = null y debes responder tú mismo en 'response'.
+
+ARGUMENTOS ESPERADOS POR HERRAMIENTA:
+
+- mcp_resumen:
+  arguments = {{
+    "threadId": "<ID del thread a analizar>"
+  }}
+  - Si el usuario menciona explícitamente un threadId, úsalo.
+  - Si NO lo menciona, pero hay THREAD_ID DISPONIBLE EN CONTEXTO, úsalo.
+
+- mcp_sentiment:
+  arguments puede tener UNA de estas formas (elige la más adecuada):
+  a) Análisis a nivel de thread completo (cuando el usuario solo da threadId):
+     {{
+       "threadId": "<threadId>"
+     }}
+  b) Análisis de mensajes específicos dentro de un thread:
+     {{
+       "threadId": "<threadId>",
+       "messageIds": ["<id1>", "<id2>", ...]
+     }}
+  c) Análisis directo de items proporcionados en la conversación del usuario:
+     {{
+       "items": [
+         {{"id": "1", "text": "texto del mensaje 1"}},
+         {{"id": "2", "text": "texto del mensaje 2"}}
+       ]
+     }}
+
+- mcp_propagation:
+  arguments DEBE incluir siempre:
+  {{
+    "root_id": "<id del mensaje raíz>"
+  }}
+  Opcionalmente puede incluir:
+  {{
+    "messages": [{{ ... payload de mensajes ... }}]
+  }}
+
+FORMATO DE RESPUESTA (JSON ESTRICTO, SIN TEXTO ADICIONAL):
 {{
-  "tool": "mcp_resumen" | null,
-  "arguments": {{ "threadId": "..." }} | null,
-  "response": "..." | null
+  "tool": "mcp_resumen" | "mcp_sentiment" | "mcp_propagation" | null,
+  "arguments": {{ ... }} | null,
+  "response": null | "<respuesta directa en español si tool es null>"
 }}
 
-IMPORTANTE:
-- Si usas mcp_resumen, DEBES incluir threadId en arguments
-- Si hay un THREAD_ID DISPONIBLE EN CONTEXTO, úsalo a menos que el usuario especifique uno diferente
-- Si el usuario menciona un threadId específico en su pregunta, úsalo
-- Si no hay threadId disponible y la pregunta requiere análisis, intenta extraerlo de la conversación o usa el disponible
-- Si tool es null, DEBES incluir response con una respuesta directa
-- Responde SOLO con el JSON, sin texto adicional"""
+REGLAS ADICIONALES CRÍTICAS:
+- Si eliges una herramienta (tool != null), 'response' DEBE ser null.
+- Si tool es null, 'arguments' DEBE ser null y 'response' DEBE contener tu respuesta final.
+- Si usas mcp_resumen y no tienes un threadId del usuario, usa el THREAD_ID DISPONIBLE EN CONTEXTO si existe.
+- Nunca inventes IDs arbitrarios; si no puedes inferir un ID requerido, responde con tool = null y una explicación en 'response'.
+- Responde SOLO con el JSON, sin comentarios, sin markdown, sin texto extra.
+"""
 
         try:
             response = self.model.generate_content(prompt)

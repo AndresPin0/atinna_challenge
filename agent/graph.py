@@ -13,6 +13,7 @@ class GraphState(TypedDict):
     last_analysis: Optional[Dict[str, Any]]
     current_thread_id: Optional[str]
     tool_decision: Optional[Dict[str, Any]]
+    tool_used: Optional[str]
     mcp_response: Optional[Dict[str, Any]]
     explanation: Optional[str]
     final_response: Optional[str]
@@ -29,6 +30,7 @@ def state_to_dict(state: AgentState) -> GraphState:
         "last_analysis": state.last_analysis.model_dump() if state.last_analysis else None,
         "current_thread_id": state.current_thread_id,
         "tool_decision": state.tool_decision,
+        "tool_used": state.tool_used,
         "mcp_response": state.mcp_response,
         "explanation": state.explanation,
         "final_response": state.final_response
@@ -48,6 +50,7 @@ def dict_to_state(state_dict: GraphState) -> AgentState:
     
     state.current_thread_id = state_dict.get("current_thread_id")
     state.tool_decision = state_dict.get("tool_decision")
+    state.tool_used = state_dict.get("tool_used")
     state.mcp_response = state_dict.get("mcp_response")
     state.explanation = state_dict.get("explanation")
     state.final_response = state_dict.get("final_response")
@@ -76,6 +79,18 @@ def create_agent_graph(gemini_client: GeminiClient):
     def resumen_wrapper(state: GraphState) -> GraphState:
         pydantic_state = dict_to_state(state)
         result = nodes.resumen_node(pydantic_state)
+        state.update(result)
+        return state
+
+    def sentiment_wrapper(state: GraphState) -> GraphState:
+        pydantic_state = dict_to_state(state)
+        result = nodes.sentiment_node(pydantic_state)
+        state.update(result)
+        return state
+
+    def propagation_wrapper(state: GraphState) -> GraphState:
+        pydantic_state = dict_to_state(state)
+        result = nodes.propagation_node(pydantic_state)
         state.update(result)
         return state
     
@@ -107,30 +122,42 @@ def create_agent_graph(gemini_client: GeminiClient):
     
     graph.add_node("decide", decide_wrapper)
     graph.add_node("resumen", resumen_wrapper)
+    graph.add_node("sentiment", sentiment_wrapper)
+    graph.add_node("propagation", propagation_wrapper)
     graph.add_node("explain", explain_wrapper)
     graph.add_node("memory", memory_wrapper)
     graph.add_node("respond", respond_wrapper)
     
     graph.set_entry_point("decide")
     
-    def should_call_tool(state: GraphState) -> Literal["resumen", "respond"]:
-        """Conditional edge: decide if tool is needed."""
-        tool_decision = state.get("tool_decision")
-        if tool_decision and tool_decision.get("tool") == "mcp_resumen":
+    def route_tool(state: GraphState) -> Literal["resumen", "sentiment", "propagation", "respond"]:
+        """Conditional edge: route to the appropriate tool node or respond directly."""
+        tool_decision = state.get("tool_decision") or {}
+        tool_name = tool_decision.get("tool")
+
+        if tool_name == "mcp_resumen":
             return "resumen"
+        if tool_name == "mcp_sentiment":
+            return "sentiment"
+        if tool_name == "mcp_propagation":
+            return "propagation"
         return "respond"
     
     graph.add_conditional_edges(
         "decide",
-        should_call_tool,
+        route_tool,
         {
             "resumen": "resumen",
+            "sentiment": "sentiment",
+            "propagation": "propagation",
             "respond": "respond"
         }
     )
     
-    # Flow: resumen -> explain -> memory -> respond -> END
+    # Flow: tool nodes -> explain -> memory -> respond -> END
     graph.add_edge("resumen", "explain")
+    graph.add_edge("sentiment", "explain")
+    graph.add_edge("propagation", "explain")
     graph.add_edge("explain", "memory")
     graph.add_edge("memory", "respond")
     graph.add_edge("respond", END)

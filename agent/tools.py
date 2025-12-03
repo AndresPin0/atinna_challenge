@@ -29,6 +29,35 @@ class MCPResumenResponse(BaseModel):
         }
 
 
+class MCPSentimentRequest(BaseModel):
+    """Request schema for MCP Sentiment endpoint."""
+    threadId: Optional[str] = Field(
+        default=None,
+        description="Optional thread ID to analyze at sentiment level",
+    )
+    messageIds: Optional[List[str]] = Field(
+        default=None,
+        description="Optional list of message IDs to focus sentiment analysis on",
+    )
+    items: Optional[List[Dict[str, str]]] = Field(
+        default=None,
+        description=(
+            "Optional list of items with 'id' and 'text' for direct sentiment analysis"
+        ),
+    )
+
+
+class MCPPropagationRequest(BaseModel):
+    """Request schema for MCP Propagation endpoint."""
+    root_id: str = Field(description="Root message ID for propagation analysis")
+    messages: Optional[List[Dict[str, Any]]] = Field(
+        default=None,
+        description=(
+            "Optional list of messages that form the thread for propagation analysis"
+        ),
+    )
+
+
 class ToolDefinition(BaseModel):
     """Definition of a tool available to the agent."""
     name: str = Field(description="Tool name")
@@ -50,6 +79,70 @@ AVAILABLE_TOOLS = {
             },
             "required": ["threadId"]
         }
-    )
+    ),
+    "mcp_sentiment": ToolDefinition(
+        name="mcp_sentiment",
+        description=(
+            "Analiza el sentimiento y clima emocional de uno o varios mensajes "
+            "de una conversación"
+        ),
+        parameters={
+            "type": "object",
+            "properties": {
+                "threadId": {
+                    "type": "string",
+                    "description": "ID opcional del thread para análisis de sentimiento",
+                },
+                "messageIds": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": (
+                        "IDs opcionales de mensajes específicos a analizar dentro del thread"
+                    ),
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {"type": "string"},
+                            "text": {"type": "string"},
+                        },
+                        "required": ["id", "text"],
+                    },
+                    "description": (
+                        "Lista opcional de mensajes ya preparados para análisis "
+                        "directo de sentimiento"
+                    ),
+                },
+            },
+            "required": [],
+        },
+    ),
+    "mcp_propagation": ToolDefinition(
+        name="mcp_propagation",
+        description=(
+            "Analiza la propagación, engagement y estructura de respuestas "
+            "de un mensaje raíz en una conversación"
+        ),
+        parameters={
+            "type": "object",
+            "properties": {
+                "root_id": {
+                    "type": "string",
+                    "description": "ID del mensaje raíz para analizar propagación",
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {"type": "object"},
+                    "description": (
+                        "Lista opcional de mensajes que conforman el thread, "
+                        "incluyendo información de autor, timestamps y relaciones"
+                    ),
+                },
+            },
+            "required": ["root_id"],
+        },
+    ),
 }
 
