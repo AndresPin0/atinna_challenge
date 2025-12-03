@@ -190,6 +190,10 @@ Main endpoints:
 
 ### 2. Run the conversational agent
 
+You have two options:
+
+#### Option A: CLI Interface
+
 In another terminal (with the same venv activated):
 
 ```bash
@@ -205,6 +209,22 @@ Escribe 'salir' o 'exit' para terminar.
 
 Usuario:
 ```
+
+#### Option B: Web Interface (Streamlit)
+
+In another terminal (with the same venv activated):
+
+```bash
+streamlit run ui/app.py
+```
+
+This will open a web interface in your browser (usually at `http://localhost:8501`).
+
+The web interface provides:
+- Chat-like interface for conversations
+- Conversation history display
+- Sidebar with current thread information
+- Button to clear conversation
 
 You can interact in Spanish or English; the routing prompt and explanations are optimized for Spanish conversation analysis, but the architecture is language‑agnostic.
 
