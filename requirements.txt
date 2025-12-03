@@ -2,3 +2,9 @@ pandas
 matplotlib
 seaborn
 fastparquet
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+google-genai
+python-dotenv
