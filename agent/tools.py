@@ -36,7 +36,6 @@ class ToolDefinition(BaseModel):
     parameters: Dict[str, Any] = Field(description="Tool parameters schema")
 
 
-# Available tools registry
 AVAILABLE_TOOLS = {
     "mcp_resumen": ToolDefinition(
         name="mcp_resumen",

@@ -90,7 +90,6 @@ IMPORTANTE:
             response = self.model.generate_content(prompt)
             response_text = response.text.strip()
             
-            # Remove markdown code blocks if present
             if response_text.startswith("```json"):
                 response_text = response_text[7:]
             if response_text.startswith("```"):
@@ -101,7 +100,6 @@ IMPORTANTE:
             
             decision = json.loads(response_text)
             
-            # Validate structure
             if "tool" not in decision:
                 raise ValueError("Missing 'tool' in decision response")
             

@@ -39,11 +39,9 @@ def dict_to_state(state_dict: GraphState) -> AgentState:
     """Convert TypedDict back to Pydantic state."""
     state = AgentState(user_query=state_dict["user_query"])
     
-    # Restore conversation history
     for msg in state_dict.get("conversation_history", []):
         state.add_message(user=msg["user"], agent=msg["agent"])
     
-    # Restore last analysis
     if state_dict.get("last_analysis"):
         analysis = state_dict["last_analysis"]
         state.last_analysis = AnalysisMemory(**analysis)
@@ -69,7 +67,6 @@ def create_agent_graph(gemini_client: GeminiClient):
     """
     nodes = AgentNodes(gemini_client)
     
-    # Wrapper functions to convert between Pydantic and TypedDict
     def decide_wrapper(state: GraphState) -> GraphState:
         pydantic_state = dict_to_state(state)
         result = nodes.decide_node(pydantic_state)
@@ -91,7 +88,6 @@ def create_agent_graph(gemini_client: GeminiClient):
     def memory_wrapper(state: GraphState) -> GraphState:
         pydantic_state = dict_to_state(state)
         result = nodes.memory_node(pydantic_state)
-        # Update state with saved analysis
         if pydantic_state.last_analysis:
             state["last_analysis"] = pydantic_state.last_analysis.model_dump()
         state.update(result)
@@ -100,7 +96,6 @@ def create_agent_graph(gemini_client: GeminiClient):
     def respond_wrapper(state: GraphState) -> GraphState:
         pydantic_state = dict_to_state(state)
         result = nodes.respond_node(pydantic_state)
-        # Update conversation history
         state["conversation_history"] = [
             {"user": msg.user, "agent": msg.agent}
             for msg in pydantic_state.conversation_history
@@ -108,20 +103,16 @@ def create_agent_graph(gemini_client: GeminiClient):
         state.update(result)
         return state
     
-    # Create graph
     graph = StateGraph(GraphState)
     
-    # Add nodes
     graph.add_node("decide", decide_wrapper)
     graph.add_node("resumen", resumen_wrapper)
     graph.add_node("explain", explain_wrapper)
     graph.add_node("memory", memory_wrapper)
     graph.add_node("respond", respond_wrapper)
     
-    # Set entry point
     graph.set_entry_point("decide")
     
-    # Add edges from decide_node
     def should_call_tool(state: GraphState) -> Literal["resumen", "respond"]:
         """Conditional edge: decide if tool is needed."""
         tool_decision = state.get("tool_decision")
@@ -144,6 +135,5 @@ def create_agent_graph(gemini_client: GeminiClient):
     graph.add_edge("memory", "respond")
     graph.add_edge("respond", END)
     
-    # Compile graph
     return graph.compile()
 

@@ -6,7 +6,6 @@ from typing import Optional
 class AgentConfig:
     """Configuration for the conversational agent."""
     
-    # Agent Settings
     MAX_RETRIES: int = 3
     REQUEST_TIMEOUT: int = 30
     
