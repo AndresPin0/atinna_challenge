@@ -32,8 +32,9 @@ jobs:
 
       - name: Run unit tests (MCP)
         run: |
-          pytest mcp/test_single_sentiment.py -v
-          pytest mcp/test_resumen_simple.py -v
-          pytest mcp/test_propagation.py -v
+          pytest tests/test_single_sentiment.py -v
+          pytest tests/test_resumen_simple.py -v
+          pytest tests/test_propagation.py -v
+
 
 

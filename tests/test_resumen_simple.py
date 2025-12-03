@@ -7,7 +7,7 @@ import json
 import pandas as pd
 
 RESUMEN_ENDPOINT = "http://localhost:8000/api/v1/analysis/resumen"
-PARQUET_PATH = "../data/reto.parquet"
+PARQUET_PATH = "data/Reto_data.parquet"
 
 
 def load_real_conversation():
