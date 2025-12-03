@@ -1,4 +1,7 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> original/dev
 # Data processing
 fastparquet>=2024.11.0
 pandas>=2.3.0
@@ -32,6 +35,7 @@ langgraph>=1.0.0
 
 # Environment
 python-dotenv>=1.2.0
+<<<<<<< HEAD
 =======
 pandas>=2.0.0
 numpy>=1.24.0
@@ -46,4 +50,6 @@ google-generativeai>=0.3.0
 pydantic>=2.0.0
 
 
+>>>>>>> original/dev
+=======
 >>>>>>> original/dev

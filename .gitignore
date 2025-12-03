@@ -1,4 +1,7 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> original/dev
 .venv/
 __pycache__/
 .ipynb_checkpoints
@@ -11,7 +14,10 @@ venv
 .docs/
 docs/
 data/
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> original/dev
 /data/
 .data/
 .env
@@ -103,4 +109,7 @@ Desktop.ini
 *.swp
 *~
 
+<<<<<<< HEAD
+>>>>>>> original/dev
+=======
 >>>>>>> original/dev
