@@ -1,17 +1,17 @@
 """
-Schemas de validación para el MCP de resumen conversacional.
+Validation schemas for the Conversational Summary MCP.
 """
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
 
 class ResumenRequest(BaseModel):
-    """Request schema para el endpoint de resumen."""
-    threadId: str = Field(..., description="ID del thread de conversación")
+    """Request schema for the summary endpoint."""
+    threadId: str = Field(..., description="ID of the conversation thread")
 
 
 class ResumenResponse(BaseModel):
-    """Response schema con el resumen estructurado."""
+    """Response schema with the structured summary."""
     resumen: str = Field(..., description="Resumen ejecutivo de la conversación")
     temas_clave: List[str] = Field(..., description="Lista de temas principales identificados")
     posturas: List[str] = Field(..., description="Posturas o posiciones detectadas en la conversación")
@@ -21,7 +21,7 @@ class ResumenResponse(BaseModel):
 
 
 class ErrorResponse(BaseModel):
-    """Schema para respuestas de error."""
+    """Schema for error responses."""
     error: str = Field(..., description="Mensaje de error")
     detail: Optional[str] = Field(None, description="Detalle adicional del error")
 

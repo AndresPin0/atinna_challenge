@@ -1,5 +1,5 @@
 """
-Servicio principal del pipeline de análisis conversacional.
+Main service for the conversational analysis pipeline.
 """
 import json
 from typing import Dict, Optional
@@ -12,14 +12,14 @@ from .config import TextProcessingConfig
 
 
 class ResumenService:
-    """Servicio que ejecuta el pipeline completo de análisis."""
+    """Service that executes the complete analysis pipeline."""
     
     def __init__(self, parquet_path: str, gemini_api_key: Optional[str] = None):
         """
-        Inicializa el servicio.
+        Initializes the service.
         
         Args:
-            parquet_path: Ruta al archivo Parquet)
+            parquet_path: Path to the Parquet file
         """
         self.loader = ParquetLoader(parquet_path)
         self.cleaner = TextCleaner()
@@ -28,21 +28,21 @@ class ResumenService:
     
     def analyze_thread(self, thread_id: str) -> ResumenResponse:
         """
-        Ejecuta el pipeline completo de análisis.
+        Executes the complete analysis pipeline.
         
         Args:
-            thread_id: ID del thread a analizar
+            thread_id: ID of the thread to analyze
             
         Returns:
-            ResumenResponse con el análisis estructurado
+            ResumenResponse with the structured analysis
             
         Raises:
-            ValueError: Si el thread no existe o hay error en el análisis
+            ValueError: If the thread does not exist or there is an error in the analysis
         """
         conversation_raw = self.loader.get_conversation_text(thread_id)
         
         if not conversation_raw:
-            raise ValueError(f"Thread {thread_id} no encontrado o sin mensajes")
+            raise ValueError(f"Thread {thread_id} not found or without messages")
         
         conversation_clean = self.cleaner.clean_conversation(conversation_raw)
         conversation_clean = self.cleaner.truncate_if_needed(
@@ -67,21 +67,21 @@ class ResumenService:
             )
         
         except json.JSONDecodeError as e:
-            raise ValueError(f"Error al parsear respuesta de Gemini: {str(e)}. Respuesta recibida: {response_text[:500]}")
+            raise ValueError(f"Error parsing Gemini response: {str(e)}. Received response: {response_text[:500]}")
         except ValueError as e:
             raise
         except Exception as e:
-            raise ValueError(f"Error inesperado al generar análisis: {str(e)}")
+            raise ValueError(f"Unexpected error generating analysis: {str(e)}")
     
     def get_thread_info(self, thread_id: str) -> Dict:
         """
-        Obtiene información básica del thread.
+        Gets basic information about the thread.
         
         Args:
-            thread_id: ID del thread
+            thread_id: ID of the thread
             
         Returns:
-            Diccionario con metadatos
+            Dictionary with metadata
         """
         return self.loader.get_thread_metadata(thread_id)
 

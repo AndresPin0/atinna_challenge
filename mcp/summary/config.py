@@ -1,6 +1,6 @@
 """
-Configuración centralizada para el MCP de resumen conversacional.
-Permite configuración vía variables de entorno con valores por defecto.
+Centralized configuration for the Conversational Summary MCP.
+Allows configuration via environment variables with default values.
 """
 import os
 from pathlib import Path
@@ -11,7 +11,7 @@ load_dotenv()
 
 
 class GeminiConfig:
-    """Configuración para el cliente Gemini."""
+    """Configuration for the Gemini client."""
     
     MODEL_NAME: str = os.getenv('GEMINI_MODEL_NAME', 'gemini-2.0-flash')
     
@@ -28,7 +28,7 @@ class GeminiConfig:
     
     @classmethod
     def get_generation_config(cls) -> Dict[str, Any]:
-        """Retorna configuración de generación para Gemini."""
+        """Returns generation configuration for Gemini."""
         return {
             "temperature": cls.TEMPERATURE,
             "top_p": cls.TOP_P,
@@ -38,7 +38,7 @@ class GeminiConfig:
     
     @classmethod
     def get_safety_settings(cls):
-        """Retorna configuración de seguridad para Gemini."""
+        """Returns safety configuration for Gemini."""
         from google.generativeai.types import HarmCategory, HarmBlockThreshold
         
         if cls.SAFETY_BLOCK_NONE:
@@ -52,12 +52,12 @@ class GeminiConfig:
 
 
 class TextProcessingConfig:
-    """Configuración para procesamiento de texto."""
+    """Configuration for text processing."""
     
     MAX_CONVERSATION_LENGTH: int = int(os.getenv('MAX_CONVERSATION_LENGTH', '100000'))
     TRUNCATE_MESSAGE: str = os.getenv(
         'TRUNCATE_MESSAGE', 
-        '\n\n[... conversación truncada por longitud ...]'
+        '\n\n[... conversation truncated by length ...]'
     )
     
     CLEAN_HTML_ENTITIES: bool = os.getenv('CLEAN_HTML_ENTITIES', 'true').lower() == 'true'
@@ -66,24 +66,24 @@ class TextProcessingConfig:
 
 
 class ServiceConfig:
-    """Configuración general del servicio."""
+    """General service configuration."""
     
-    DEFAULT_PARQUET_PATH: Path = Path(__file__).parent.parent.parent / 'data' / 'clean' / 'Reto_data_20251023_122206.parquet'
+    DEFAULT_PARQUET_PATH: Path = Path(__file__).parent.parent.parent / 'data' / 'Reto_data_20251023_122206.parquet'
     PARQUET_PATH: str = os.getenv('PARQUET_PATH', str(DEFAULT_PARQUET_PATH))
     
     GEMINI_API_KEY: str = os.getenv('GEMINI_API_KEY', '')
     
     SERVICE_VERSION: str = os.getenv('SERVICE_VERSION', '1.0.0')
-    SERVICE_NAME: str = os.getenv('SERVICE_NAME', 'MCP Resumen Conversacional')
+    SERVICE_NAME: str = os.getenv('SERVICE_NAME', 'MCP Conversational Summary')
     
     @classmethod
     def validate(cls) -> None:
-        """Valida que la configuración esté completa."""
+        """Validates that the configuration is complete."""
         if not cls.GEMINI_API_KEY:
-            raise ValueError("GEMINI_API_KEY no configurada en variables de entorno")
+            raise ValueError("GEMINI_API_KEY not configured in environment variables")
         
         if not Path(cls.PARQUET_PATH).exists():
-            raise FileNotFoundError(f"Archivo Parquet no encontrado: {cls.PARQUET_PATH}")
+            raise FileNotFoundError(f"Parquet file not found: {cls.PARQUET_PATH}")
 
 
 config = ServiceConfig()

@@ -1,5 +1,5 @@
 """
-Módulo de limpieza y normalización de texto conversacional.
+Module for cleaning and normalizing conversational text.
 """
 import re
 from typing import Optional
@@ -7,23 +7,23 @@ from .config import TextProcessingConfig
 
 
 class TextCleaner:
-    """Limpieza de texto para conversaciones digitales."""
+    """Cleaning text for digital conversations."""
     
     @staticmethod
     def clean_html_entities(text: str) -> str:
         """
-        Limpia entidades HTML codificadas.
+        Cleans encoded HTML entities.
         
         Args:
-            text: Texto con entidades HTML
+            text: Text with HTML entities
             
         Returns:
-            Texto limpio
+            Clean text
         """
         if not text:
             return ""
         
-        # Reemplazar entidades HTML comunes
+        # Replace common HTML entities
         replacements = {
             '&nbsp;': ' ',
             '&amp;': '&',
@@ -63,13 +63,13 @@ class TextCleaner:
     @staticmethod
     def normalize_whitespace(text: str) -> str:
         """
-        Normaliza espacios en blanco.
+        Normalizes whitespace.
         
         Args:
-            text: Texto con espacios irregulares
+            text: Text with irregular whitespace
             
         Returns:
-            Texto con espacios normalizados
+            Text with normalized whitespace
         """
         if not text:
             return ""
@@ -83,13 +83,13 @@ class TextCleaner:
     @staticmethod
     def clean_urls(text: str) -> str:
         """
-        Limpia URLs del texto, dejando solo el dominio.
+        Cleans URLs from text, leaving only the domain.
         
         Args:
-            text: Texto con URLs
+            text: Text with URLs
             
         Returns:
-            Texto sin URLs completas
+            Text without full URLs
         """
         if not text:
             return ""
@@ -102,13 +102,13 @@ class TextCleaner:
     @staticmethod
     def clean_conversation(conversation: str) -> str:
         """
-        Limpia una conversación completa aplicando todas las transformaciones.
+        Cleans a complete conversation applying all transformations.
         
         Args:
-            conversation: Texto de la conversación
+            conversation: Text of the conversation
             
         Returns:
-            Conversación limpia
+            Clean conversation
         """
         if not conversation:
             return ""
@@ -129,14 +129,14 @@ class TextCleaner:
     @staticmethod
     def truncate_if_needed(text: str, max_length: Optional[int] = None) -> str:
         """
-        Trunca texto si excede longitud máxima (para evitar límites de API).
+        Truncates text if it exceeds the maximum length (to avoid API limits).
         
         Args:
-            text: Texto a truncar
-            max_length: Longitud máxima permitida 
+            text: Text to truncate
+            max_length: Maximum length allowed
             
         Returns:
-            Texto truncado si es necesario
+            Truncated text if needed
         """
         if not text:
             return ""

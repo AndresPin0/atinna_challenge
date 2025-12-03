@@ -1,5 +1,5 @@
 """
-FastAPI application para el MCP de resumen conversacional.
+FastAPI application for the Conversational Summary MCP.
 """
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
@@ -11,11 +11,11 @@ from .config import ServiceConfig, GeminiConfig
 try:
     ServiceConfig.validate()
 except (ValueError, FileNotFoundError) as e:
-    print(f"Error de configuración: {e}")
+    print(f"Configuration error: {e}")
 
 app = FastAPI(
     title=ServiceConfig.SERVICE_NAME,
-    description="Microservicio para generar resúmenes ejecutivos de conversaciones digitales",
+    description="Microservice for generating executive summaries of digital conversations",
     version=ServiceConfig.SERVICE_VERSION
 )
 
@@ -23,7 +23,7 @@ try:
     resumen_service = ResumenService(ServiceConfig.PARQUET_PATH)
 except Exception as e:
     resumen_service = None
-    print(f"Advertencia: No se pudo inicializar el servicio: {e}")
+    print(f"Warning: Could not initialize the service: {e}")
 
 
 @app.get("/")
@@ -38,11 +38,11 @@ async def root():
 
 @app.get("/health")
 async def health():
-    """Health check detallado."""
+    """Detailed health check."""
     if resumen_service is None:
         return JSONResponse(
             status_code=503,
-            content={"status": "unhealthy", "error": "Servicio no inicializado"}
+            content={"status": "unhealthy", "error": "Service not initialized"}
         )
     
     return {
@@ -53,20 +53,20 @@ async def health():
 
 
 @app.post("/analisis/resumen", response_model=ResumenResponse)
-async def generar_resumen(request: ResumenRequest):
+async def generate_summary(request: ResumenRequest):
     """
-    Genera un resumen ejecutivo de una conversación por threadId.
+    Generates an executive summary of a conversation by threadId.
     
     Args:
-        request: Request con threadId
+        request: Request with threadId
         
     Returns:
-        ResumenResponse con el análisis estructurado
+        ResumenResponse with the structured analysis
     """
     if resumen_service is None:
         raise HTTPException(
             status_code=503,
-            detail="Servicio no inicializado. Verifica la configuración."
+            detail="Service not initialized. Verify the configuration."
         )
     
     try:
@@ -75,7 +75,7 @@ async def generar_resumen(request: ResumenRequest):
         if thread_info['message_count'] == 0:
             raise HTTPException(
                 status_code=404,
-                detail=f"Thread {request.threadId} no encontrado o sin mensajes"
+                detail=f"Thread {request.threadId} not found or without messages"
             )
         
         resultado = resumen_service.analyze_thread(request.threadId)
@@ -89,15 +89,15 @@ async def generar_resumen(request: ResumenRequest):
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Error interno al procesar la solicitud: {str(e)}"
+            detail=f"Internal error processing the request: {str(e)}"
         )
 
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
-    """Manejador global de excepciones."""
+    """Global exception handler."""
     return JSONResponse(
         status_code=500,
-        content={"error": "Error interno del servidor", "detail": str(exc)}
+        content={"error": "Internal server error", "detail": str(exc)}
     )
 

@@ -1,5 +1,5 @@
 """
-Loader para cargar y filtrar conversaciones desde archivo Parquet.
+Loader for loading and filtering conversations from a Parquet file.
 """
 import pandas as pd
 from pathlib import Path
@@ -8,28 +8,28 @@ import os
 
 
 class ParquetLoader:
-    """Carga y filtra conversaciones desde archivo Parquet."""
+    """Loads and filters conversations from a Parquet file."""
     
     def __init__(self, parquet_path: str):
         """
-        Inicializa el loader con la ruta al archivo Parquet.
+        Initializes the loader with the path to the Parquet file.
         
         Args:
-            parquet_path: Ruta al archivo .parquet
+            parquet_path: Path to the .parquet file
         """
         self.parquet_path = Path(parquet_path)
         if not self.parquet_path.exists():
-            raise FileNotFoundError(f"Archivo Parquet no encontrado: {parquet_path}")
+            raise FileNotFoundError(f"Parquet file not found: {parquet_path}")
     
     def load_thread(self, thread_id: str) -> pd.DataFrame:
         """
-        Carga y filtra mensajes por threadId.
+        Loads and filters messages by threadId.
         
         Args:
-            thread_id: ID del thread a cargar
+            thread_id: ID of the thread to load
             
         Returns:
-            DataFrame con los mensajes del thread, ordenados por createdAt
+            DataFrame with the messages of the thread, ordered by createdAt
         """
         df = pd.read_parquet(self.parquet_path)
         
@@ -47,13 +47,13 @@ class ParquetLoader:
     
     def get_conversation_text(self, thread_id: str) -> str:
         """
-        Obtiene el texto completo de la conversación uniendo todos los mensajes.
+        Gets the complete text of the conversation by joining all messages.
         
         Args:
-            thread_id: ID del thread
+            thread_id: ID of the thread
             
         Returns:
-            String con todos los textos unidos
+            String with all texts joined
         """
         df = self.load_thread(thread_id)
         
@@ -68,13 +68,13 @@ class ParquetLoader:
     
     def get_thread_metadata(self, thread_id: str) -> Dict:
         """
-        Obtiene metadatos del thread.
+        Gets metadata of the thread.
         
         Args:
-            thread_id: ID del thread
+            thread_id: ID of the thread
             
         Returns:
-            Diccionario con metadatos
+            Dictionary with metadata
         """
         df = self.load_thread(thread_id)
         

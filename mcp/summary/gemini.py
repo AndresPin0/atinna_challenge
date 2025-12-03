@@ -1,6 +1,6 @@
 """
-Cliente para la API de Google Gemini.
-Maneja conexión, errores y retry logic.
+Client for the Google Gemini API.
+Handles connection, errors and retry logic.
 """
 import os
 import time
@@ -10,19 +10,19 @@ from .config import GeminiConfig
 
 
 class GeminiClient:
-    """Cliente para interactuar con la API de Gemini."""
+    """Client for interacting with the Gemini API."""
     
     def __init__(self, api_key: Optional[str] = None):
         """
-        Inicializa el cliente Gemini.
+        Initializes the Gemini client.
         
         Args:
-            api_key: API key de Gemini. Si no se proporciona, se lee de GEMINI_API_KEY
+            api_key: Gemini API key. If not provided, reads from GEMINI_API_KEY
         """
         from .config import ServiceConfig
         api_key = api_key or ServiceConfig.GEMINI_API_KEY
         if not api_key:
-            raise ValueError("GEMINI_API_KEY no configurada en variables de entorno")
+            raise ValueError("GEMINI_API_KEY not configured in environment variables")
         
         genai.configure(api_key=api_key)
         
@@ -37,17 +37,17 @@ class GeminiClient:
     
     def generate_content(self, prompt: str, max_retries: Optional[int] = None) -> str:
         """
-        Genera contenido usando Gemini con manejo de errores y retry.
+        Generates content using Gemini with error handling and retry.
         
         Args:
-            prompt: Prompt a enviar a Gemini
-            max_retries: Número máximo de reintentos
+            prompt: Prompt to send to Gemini
+            max_retries: Maximum number of retries
             
         Returns:
-            Texto de respuesta de Gemini
+            Text of the Gemini response
             
         Raises:
-            ValueError: Si hay error en la API después de todos los reintentos
+            ValueError: If there is an error in the API after all retries
         """
         max_retries = max_retries or GeminiConfig.MAX_RETRIES
         last_error = None
@@ -57,7 +57,7 @@ class GeminiClient:
                 response = self.model.generate_content(prompt)
                 
                 if not response.text:
-                    raise ValueError("Respuesta vacía de Gemini")
+                    raise ValueError("Empty response from Gemini")
                 
                 return response.text
             
@@ -66,33 +66,33 @@ class GeminiClient:
                 error_str = str(e).lower()
                 
                 if "api key" in error_str or "authentication" in error_str:
-                    raise ValueError(f"Error de autenticación con Gemini: {str(e)}")
+                    raise ValueError(f"Authentication error with Gemini: {str(e)}")
                 
                 if "quota" in error_str or "rate limit" in error_str:
                     wait_time = (attempt + 1) * GeminiConfig.RETRY_QUOTA_BACKOFF
                     if attempt < max_retries - 1:
                         time.sleep(wait_time)
                         continue
-                    raise ValueError(f"Límite de cuota excedido en Gemini: {str(e)}")
+                    raise ValueError(f"Gemini quota limit exceeded: {str(e)}")
                 
                 if "safety" in error_str or "blocked" in error_str:
-                    raise ValueError(f"Contenido bloqueado por políticas de seguridad: {str(e)}")
+                    raise ValueError(f"Content blocked by security policies: {str(e)}")
                 
                 if attempt < max_retries - 1:
                     wait_time = (attempt + 1) * GeminiConfig.RETRY_BACKOFF_BASE
                     time.sleep(wait_time)
                     continue
                 else:
-                    raise ValueError(f"Error al generar contenido con Gemini (intentos agotados): {str(e)}")
+                    raise ValueError(f"Error generating content with Gemini (attempts exhausted): {str(e)}")
         
-        raise ValueError(f"Error al generar contenido: {str(last_error)}")
+        raise ValueError(f"Error generating content: {str(last_error)}")
     
     def is_available(self) -> bool:
         """
-        Verifica si el cliente está disponible y configurado correctamente.
+        Checks if the client is available and configured correctly.
         
         Returns:
-            True si el cliente está disponible
+            True if the client is available
         """
         try:
             test_response = self.model.generate_content("test")
