@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 
-from app.api.sentiment_router import router as sentiment_router
-from app.api.propagation_router import router as propagation_router
-from app.api.resumen_router import router as resumen_router
+from mcp.app.api.sentiment_router import router as sentiment_router
+from mcp.app.api.propagation_router import router as propagation_router
+from mcp.app.api.resumen_router import router as resumen_router
 
 def create_app() -> FastAPI:
     app = FastAPI(

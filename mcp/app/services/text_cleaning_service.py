@@ -3,7 +3,7 @@ Servicio de limpieza y normalización de texto conversacional.
 """
 import re
 from typing import List
-from app.models.resumen_models import MessageInput
+from ..models.resumen_models import MessageInput
 
 
 class TextCleaningService:

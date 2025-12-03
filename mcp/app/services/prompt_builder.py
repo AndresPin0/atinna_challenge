@@ -2,7 +2,7 @@
 Constructor de prompts para análisis conversacional con Gemini.
 """
 from typing import Dict
-from app.llm.gemini_client import GeminiClient
+from ..llm.gemini_client import GeminiClient
 
 
 class PromptBuilder:

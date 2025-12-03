@@ -1,11 +1,11 @@
 from fastapi import APIRouter
 
-from app.models.sentiment_models import (
+from ..models.sentiment_models import (
     SentimentRequest,
     SentimentResponse,
     SentimentResult,
 )
-from app.services.sentiment_service import analyze_sentiment_batch
+from ..services.sentiment_service import analyze_sentiment_batch
 
 router = APIRouter(prefix="/api/v1/analysis", tags=["sentiment"])
 

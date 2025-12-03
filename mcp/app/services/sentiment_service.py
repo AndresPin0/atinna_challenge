@@ -1,7 +1,7 @@
 from typing import List, Dict, Any
 
-from app.core.config import settings
-from app.llm.gemini_client import GeminiSentimentClient
+from ..core.config import settings
+from ..llm.gemini_client import GeminiSentimentClient
 
 
 client = GeminiSentimentClient()

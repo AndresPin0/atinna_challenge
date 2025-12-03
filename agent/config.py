@@ -14,8 +14,29 @@ class AgentConfig:
         """Get MCP Resumen URL from environment."""
         return os.getenv(
             "MCP_RESUMEN_URL", 
-            "http://localhost:8000/analisis/resumen"
+            "http://localhost:8000/api/v1/analysis/resumen"
         )
+
+    @classmethod
+    def get_mcp_sentiment_url(cls) -> str:
+        """Get MCP Sentiment URL from environment."""
+        return os.getenv(
+            "MCP_SENTIMENT_URL",
+            "http://localhost:8000/api/v1/analysis/sentiment",
+        )
+
+    @classmethod
+    def get_mcp_propagation_url(cls) -> str:
+        """Get MCP Propagation URL from environment."""
+        return os.getenv(
+            "MCP_PROPAGATION_URL",
+            "http://localhost:8000/api/v1/analysis/propagation",
+        )
+
+    @classmethod
+    def get_parquet_path(cls) -> Optional[str]:
+        """Get Parquet file path from environment."""
+        return os.getenv("PARQUET_PATH")
     
     @classmethod
     def get_gemini_api_key(cls) -> Optional[str]:

@@ -4,7 +4,7 @@ from typing import List, Dict, Any, Optional
 
 from google import genai
 
-from app.core.config import settings
+from ..core.config import settings
 
 
 class GeminiClient:

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from app.models.propagation_models import (
+from ..models.propagation_models import (
     PropagationRequest,
     PropagationResponse,
     PropagationSummary,
@@ -8,7 +8,7 @@ from app.models.propagation_models import (
     TimeBucket,
     TopReply,
 )
-from app.services.propagation_service import compute_propagation
+from ..services.propagation_service import compute_propagation
 
 router = APIRouter(prefix="/api/v1/analysis", tags=["propagation"])
 

@@ -3,7 +3,7 @@ from collections import defaultdict, Counter
 from datetime import datetime, timezone, timedelta
 import re
 
-from app.models.propagation_models import PropagationMessage
+from ..models.propagation_models import PropagationMessage
 
 
 def _parse_dt(dt_str: str) -> datetime:

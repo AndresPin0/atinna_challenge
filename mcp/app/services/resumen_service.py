@@ -3,10 +3,10 @@ Servicio principal para generación de resúmenes conversacionales.
 """
 import json
 from typing import List
-from app.models.resumen_models import MessageInput, ResumenResponse
-from app.services.text_cleaning_service import TextCleaningService
-from app.services.prompt_builder import PromptBuilder
-from app.llm.gemini_client import GeminiClient
+from ..models.resumen_models import MessageInput, ResumenResponse
+from ..services.text_cleaning_service import TextCleaningService
+from ..services.prompt_builder import PromptBuilder
+from ..llm.gemini_client import GeminiClient
 
 
 class ResumenService:

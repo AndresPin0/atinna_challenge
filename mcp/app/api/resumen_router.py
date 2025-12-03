@@ -4,8 +4,8 @@ Router para el endpoint de resumen conversacional.
 from fastapi import APIRouter, HTTPException
 from typing import Dict
 
-from app.models.resumen_models import ResumenRequest, ResumenResponse
-from app.services.resumen_service import ResumenService
+from ..models.resumen_models import ResumenRequest, ResumenResponse
+from ..services.resumen_service import ResumenService
 
 router = APIRouter(
     prefix="/api/v1/analysis",

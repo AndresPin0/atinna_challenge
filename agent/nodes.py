@@ -6,6 +6,7 @@ from .router import Router
 from .gemini import GeminiClient
 from .config import AgentConfig
 from .tools import MCPResumenResponse
+from .parquet_Loader import AgentParquetLoader
 
 
 class AgentNodes:
@@ -20,7 +21,17 @@ class AgentNodes:
         """
         self.gemini_client = gemini_client
         self.router = Router(gemini_client)
-    
+        try:
+                parquet_path = AgentConfig.get_parquet_path()
+                if parquet_path:
+                    self.parquet_loader = AgentParquetLoader(parquet_path)
+                else:
+                    self.parquet_loader = None
+        except Exception as e:
+            print(f"Warning: No se pudo inicializar ParquetLoader: {e}")
+            self.parquet_loader = None
+
+
     def decide_node(self, state: AgentState) -> Dict[str, Any]:
         """
         Decision node: determines which tool to use.
@@ -62,11 +73,24 @@ class AgentNodes:
         
         thread_id = state.tool_decision["arguments"]["threadId"]
         
+        if not self.parquet_loader:
+            raise ValueError("ParquetLoader no está configurado. Configura PARQUET_PATH en variables de entorno.")
+        
+        try:
+            messages = self.parquet_loader.load_thread_messages(thread_id)
+        except ValueError as e:
+            raise ValueError(f"Error cargando mensajes desde Parquet: {str(e)}")
+        
+        payload = {
+            "threadId": thread_id,
+            "messages": messages
+        }
+        
         try:
             with httpx.Client(timeout=AgentConfig.REQUEST_TIMEOUT) as client:
                 response = client.post(
                     AgentConfig.get_mcp_resumen_url(),
-                    json={"threadId": thread_id}
+                    json=payload
                 )
                 response.raise_for_status()
                 mcp_data = response.json()

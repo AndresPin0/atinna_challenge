@@ -1,3 +1,1 @@
-"""
-MCP - Microservices for Cognitive Processing
-"""
+"""MCP package."""
