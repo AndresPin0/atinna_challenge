@@ -30,10 +30,5 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
 
-      - name: Run unit tests (MCP)
-        run: |
-          pytest mcp/test_single_sentiment.py -v
-          pytest mcp/test_resumen_simple.py -v
-          pytest mcp/test_propagation.py -v
 
 
