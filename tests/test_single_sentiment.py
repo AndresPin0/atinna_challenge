@@ -3,10 +3,11 @@ Script de prueba para analizar el sentimiento de registros específicos.
 """
 import pandas as pd
 import requests
+from pathlib import Path
 from typing import Dict, Any
 
 # Configuración
-PARQUET_PATH = "../data/reto.parquet"
+PARQUET_PATH = "data/Reto_data.parquet"
 SENTIMENT_ENDPOINT = "http://localhost:8000/api/v1/analysis/sentiment"
 
 
@@ -99,9 +100,13 @@ def analyze_single_message(df: pd.DataFrame, post_id: str) -> None:
 
 def main():
     """Función principal de prueba."""
-    
+
+    if not Path(PARQUET_PATH).exists():
+        print(f"Dataset no encontrado en {PARQUET_PATH}. Se omiten las pruebas interactivas de sentimiento.")
+        return
+
     print("Cargando dataset...")
-    df = pd.read_parquet(PARQUET_PATH, engine='fastparquet')
+    df = pd.read_parquet(PARQUET_PATH, engine="fastparquet")
     print(f"Dataset cargado: {len(df)} registros")
     
     # Prueba 1: Primer registro

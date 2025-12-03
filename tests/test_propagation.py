@@ -2,8 +2,9 @@ import pandas as pd
 import requests
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
-PARQUET_PATH = "../data/reto.parquet"
+PARQUET_PATH = "data/Reto_data.parquet"
 PROPAGATION_ENDPOINT = "http://localhost:8000/api/v1/analysis/propagation"
 
 
@@ -352,6 +353,10 @@ def interactive_mode(df: pd.DataFrame):
 
 
 if __name__ == "__main__":
+    if not Path(PARQUET_PATH).exists():
+        print(f"[INFO] Dataset no encontrado en {PARQUET_PATH}. Se omiten las pruebas interactivas de propagación.")
+        sys.exit(0)
+
     df = load_dataset()
     print(f"[INFO] Dataset cargado: {len(df)} registros")
 

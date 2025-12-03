@@ -2,9 +2,12 @@
 Test simple para el endpoint de resumen conversacional.
 Carga una conversación real del dataset y la envía al endpoint.
 """
-import requests
 import json
+from pathlib import Path
 import pandas as pd
+import pytest
+import requests
+
 
 RESUMEN_ENDPOINT = "http://localhost:8000/api/v1/analysis/resumen"
 PARQUET_PATH = "data/Reto_data.parquet"
@@ -13,44 +16,56 @@ PARQUET_PATH = "data/Reto_data.parquet"
 def load_real_conversation():
     """Carga una conversación real del dataset."""
     print("Cargando dataset...")
-    df = pd.read_parquet(PARQUET_PATH, engine='fastparquet')
-    
+    df = pd.read_parquet(PARQUET_PATH, engine="fastparquet")
+
     # Encontrar el thread más activo
     thread_counts = df.groupby("threadId").size().sort_values(ascending=False)
     top_thread_id = thread_counts.index[0]
-    
+
     print(f"Thread más activo: {top_thread_id} con {thread_counts.iloc[0]} mensajes")
-    
+
     # Tomar el thread y ordenar por fecha
     df_thread = df[df["threadId"] == top_thread_id].copy()
     df_thread = df_thread.sort_values("createdAt")
-    
+
     # Tomar los primeros 8 mensajes
     messages_sample = df_thread.head(8)
-    
+
     messages = []
     for _, row in messages_sample.iterrows():
-        text = str(row.get('text', '')) if pd.notna(row.get('text')) else ''
-        author = str(row.get('author', 'Anónimo')) if pd.notna(row.get('author')) else 'Anónimo'
-        created = pd.to_datetime(row['createdAt'], unit='ms', utc=True).isoformat()
-        msg_id = str(row['id'])
-        
-        messages.append({
-            "id": msg_id,
-            "text": text,
-            "createdAt": created,
-            "author": author
-        })
-    
+        text = str(row.get("text", "")) if pd.notna(row.get("text")) else ""
+        author = (
+            str(row.get("author", "Anónimo"))
+            if pd.notna(row.get("author"))
+            else "Anónimo"
+        )
+        created = pd.to_datetime(row["createdAt"], unit="ms", utc=True).isoformat()
+        msg_id = str(row["id"])
+
+        messages.append(
+            {
+                "id": msg_id,
+                "text": text,
+                "createdAt": created,
+                "author": author,
+            }
+        )
+
     return {
         "threadId": str(top_thread_id),
-        "messages": messages
+        "messages": messages,
     }
 
 
 def test_resumen_simple():
-    """Prueba básica con conversación real del dataset."""
-    
+    """Prueba básica con conversación real del dataset.
+
+    Si el dataset real no está disponible (por ejemplo en CI remoto),
+    el test se marca como skipped en lugar de fallar.
+    """
+    if not Path(PARQUET_PATH).exists():
+        pytest.skip(f"Dataset Parquet no disponible en {PARQUET_PATH}; se omite test de integración.")
+
     payload = load_real_conversation()
     
     print("=" * 80)
