@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 Reto Atinna – Conversational Agent + MCP Microservices
 =====================================================
 
@@ -537,7 +536,3 @@ Design notes
   - First, summarize a thread.
   - Then, ask follow‑up questions about emotional climate or propagation without repeating IDs.
 - The Parquet dataset is only read from the agent side to build rich payloads for MCPs; the MCP services themselves are agnostic to where the data comes from.
-
-
-
->>>>>>> original/dev
