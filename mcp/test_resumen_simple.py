@@ -22,7 +22,7 @@ def test_resumen_simple():
             },
             {
                 "id": "msg2",
-                "text": "Esto es un ataque directo a los trabajadores! No podemos permitir que nos quiten nuestros derechos. Es hora de protestar! 😡",
+                "text": "Esto es un ataque directo a los trabajadores! No podemos permitir que nos quiten nuestros derechos. Es hora de protestar!",
                 "createdAt": "2025-06-25T10:05:00Z",
                 "author": "TrabajadorColombia"
             },
@@ -60,12 +60,12 @@ def test_resumen_simple():
     print(f"Thread ID: {payload['threadId']}")
     print(f"Mensajes a analizar: {len(payload['messages'])}")
     
-    print("\n📝 Conversación:")
+    print("\nConversación:")
     for msg in payload['messages']:
         print(f"\n  [{msg['author']}]")
         print(f"  {msg['text'][:100]}...")
     
-    print(f"\n\n🚀 Enviando request al endpoint...")
+    print(f"\n\nEnviando request al endpoint...")
     
     try:
         response = requests.post(RESUMEN_ENDPOINT, json=payload, timeout=120)
@@ -74,63 +74,63 @@ def test_resumen_simple():
         data = response.json()
         
         print("\n" + "=" * 80)
-        print("✅ RESPUESTA EXITOSA")
+        print("RESPUESTA EXITOSA")
         print("=" * 80)
         
-        print(f"\n📋 Thread ID: {data['threadId']}")
-        print(f"📊 Mensajes analizados: {data['message_count']}")
+        print(f"\nThread ID: {data['threadId']}")
+        print(f"Mensajes analizados: {data['message_count']}")
         
         print(f"\n" + "─" * 80)
-        print("📝 RESUMEN EJECUTIVO")
+        print("RESUMEN EJECUTIVO")
         print("─" * 80)
         print(data['resumen'])
         
         print(f"\n" + "─" * 80)
-        print("🔑 TEMAS CLAVE")
+        print("TEMAS CLAVE")
         print("─" * 80)
         for i, tema in enumerate(data['temas_clave'], 1):
             print(f"  {i}. {tema}")
         
         print(f"\n" + "─" * 80)
-        print("💭 POSTURAS DETECTADAS")
+        print("POSTURAS DETECTADAS")
         print("─" * 80)
         for i, postura in enumerate(data['posturas'], 1):
             print(f"  {i}. {postura}")
         
         print(f"\n" + "─" * 80)
-        print("😊 TONO EMOCIONAL")
+        print("TONO EMOCIONAL")
         print("─" * 80)
         print(f"  {data['tono_emocional']}")
         
         print(f"\n" + "─" * 80)
-        print("⚠️  RIESGOS DETECTADOS")
+        print("RIESGOS DETECTADOS")
         print("─" * 80)
         if data['riesgos_detectados']:
             for i, riesgo in enumerate(data['riesgos_detectados'], 1):
                 print(f"  {i}. {riesgo}")
         else:
-            print("  ✓ Ningún riesgo detectado")
+            print("  Ningún riesgo detectado")
         
         print(f"\n" + "─" * 80)
-        print("✅ CONCLUSIÓN")
+        print("CONCLUSIÓN")
         print("─" * 80)
         print(f"  {data['conclusion']}")
         
         print("\n" + "=" * 80)
-        print("✅ TEST COMPLETADO EXITOSAMENTE")
+        print("TEST COMPLETADO EXITOSAMENTE")
         print("=" * 80)
         
         return True
         
     except requests.exceptions.Timeout:
-        print("\n❌ ERROR: Timeout al llamar al endpoint (120s)")
+        print("\nERROR: Timeout al llamar al endpoint (120s)")
         return False
     except requests.exceptions.ConnectionError:
-        print("\n❌ ERROR: No se pudo conectar al servidor")
+        print("\nERROR: No se pudo conectar al servidor")
         print("   Verifica que el servidor esté corriendo en http://localhost:8000")
         return False
     except requests.exceptions.HTTPError as e:
-        print(f"\n❌ ERROR HTTP: {e}")
+        print(f"\nERROR HTTP: {e}")
         if e.response is not None:
             print(f"\nDetalle del error:")
             try:
@@ -140,15 +140,15 @@ def test_resumen_simple():
                 print(e.response.text)
         return False
     except Exception as e:
-        print(f"\n❌ ERROR INESPERADO: {str(e)}")
+        print(f"\nERROR INESPERADO: {str(e)}")
         return False
 
 
 if __name__ == "__main__":
-    print("\n🧪 Iniciando test del endpoint de resumen...\n")
+    print("\nIniciando test del endpoint de resumen...\n")
     success = test_resumen_simple()
     
     if success:
-        print("\n✅ El endpoint de resumen está funcionando correctamente!")
+        print("\nEl endpoint de resumen está funcionando correctamente!")
     else:
-        print("\n❌ El test ha fallado. Revisa los errores arriba.")
+        print("\nEl test ha fallado. Revisa los errores arriba.")

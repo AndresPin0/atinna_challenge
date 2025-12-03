@@ -37,7 +37,7 @@ def analyze_single_message(df: pd.DataFrame, post_id: str) -> None:
     # Buscar el registro
     row = df[df["id"] == post_id]
     if row.empty:
-        print(f"❌ No se encontró ningún post con id={post_id}")
+        print(f"No se encontró ningún post con id={post_id}")
         return
     
     row = row.iloc[0].to_dict()
@@ -47,7 +47,7 @@ def analyze_single_message(df: pd.DataFrame, post_id: str) -> None:
     print(f"{'='*80}")
     
     # Mostrar información del post
-    print(f"\n📄 Información del Post:")
+    print(f"\nInformación del Post:")
     print(f"  - ID: {row.get('id')}")
     print(f"  - Autor: {row.get('author', 'N/A')}")
     print(f"  - Tipo: {row.get('type', 'N/A')}")
@@ -56,7 +56,7 @@ def analyze_single_message(df: pd.DataFrame, post_id: str) -> None:
     
     # Construir texto
     text = build_text_from_row(row)
-    print(f"\n📝 Texto (primeras 300 chars):")
+    print(f"\nTexto (primeras 300 chars):")
     print(f"  {text[:300]}...")
     
     # Preparar payload
@@ -67,7 +67,7 @@ def analyze_single_message(df: pd.DataFrame, post_id: str) -> None:
     
     try:
         # Llamar al endpoint
-        print(f"\n🔄 Enviando solicitud al servidor...")
+        print(f"\nEnviando solicitud al servidor...")
         response = requests.post(
             SENTIMENT_ENDPOINT, 
             json={"items": [item]}, 
@@ -79,22 +79,22 @@ def analyze_single_message(df: pd.DataFrame, post_id: str) -> None:
         results = result_data.get("results", [])
         
         if not results:
-            print("⚠️  El servidor no devolvió resultados.")
+            print("El servidor no devolvió resultados.")
             return
         
         # Mostrar resultado
         result = results[0]
-        print(f"\n✅ Resultado del Análisis:")
+        print(f"\nResultado del Análisis:")
         print(f"  - Sentimiento: {result.get('sentiment', 'N/A').upper()}")
         print(f"  - Confianza: {result.get('score', 0):.2f}")
         print(f"  - Explicación: {result.get('explanation', 'N/A')}")
         
     except requests.exceptions.Timeout:
-        print("❌ Error: Timeout esperando respuesta del servidor")
+        print("Error: Timeout esperando respuesta del servidor")
     except requests.exceptions.ConnectionError:
-        print("❌ Error: No se pudo conectar al servidor. ¿Está corriendo?")
+        print("Error: No se pudo conectar al servidor. ¿Está corriendo?")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
 
 
 def main():
@@ -102,7 +102,7 @@ def main():
     
     print("Cargando dataset...")
     df = pd.read_parquet(PARQUET_PATH, engine='fastparquet')
-    print(f"✅ Dataset cargado: {len(df)} registros")
+    print(f"Dataset cargado: {len(df)} registros")
     
     # Prueba 1: Primer registro
     print(f"\n{'#'*80}")

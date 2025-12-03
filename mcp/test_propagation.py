@@ -89,7 +89,7 @@ def show_root_impact(df: pd.DataFrame, root_id: str, propagation_data: dict):
     print("ANÁLISIS DE IMPACTO DEL ROOT MESSAGE")
     print("="*80)
     
-    print(f"\n📝 ROOT MESSAGE:")
+    print(f"\nROOT MESSAGE:")
     print(f"  ID: {root_id}")
     print(f"  Author: {root_row.get('author', 'N/A')}")
     print(f"  Created: {datetime.fromtimestamp(int(root_row['createdAt'])/1000, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}")
@@ -97,7 +97,7 @@ def show_root_impact(df: pd.DataFrame, root_id: str, propagation_data: dict):
     print(f"  Engagement Rate: {safe_float(root_row.get('engagementRate')):.4f}")
     print(f"  Influence Score: {safe_float(root_row.get('influenceScore')):.4f}")
     
-    print(f"\n📊 MAGNITUD DEL IMPACTO:")
+    print(f"\nMAGNITUD DEL IMPACTO:")
     print(f"  Total de respuestas generadas: {summary.get('total_replies', 0)}")
     print(f"  Profundidad máxima alcanzada: {summary.get('max_depth', 0)} niveles")
     print(f"  Autores únicos que participaron: {summary.get('unique_authors', 0)}")
@@ -113,7 +113,7 @@ def show_root_impact(df: pd.DataFrame, root_id: str, propagation_data: dict):
     # Alcance por nivel
     levels = propagation_data.get("levels", [])
     if levels:
-        print(f"\n📈 DISTRIBUCIÓN DE RESPUESTAS POR NIVEL:")
+        print(f"\nDISTRIBUCIÓN DE RESPUESTAS POR NIVEL:")
         for lvl in levels:
             if lvl['depth'] == 0:
                 continue
@@ -123,7 +123,7 @@ def show_root_impact(df: pd.DataFrame, root_id: str, propagation_data: dict):
     # Engagement acumulado del thread
     total_engagement = df_thread['engagementRate'].apply(safe_float).sum()
     avg_engagement = total_engagement / len(df_thread) if len(df_thread) > 0 else 0
-    print(f"\n💬 ENGAGEMENT DEL THREAD:")
+    print(f"\nENGAGEMENT DEL THREAD:")
     print(f"  Engagement total acumulado: {total_engagement:.4f}")
     print(f"  Engagement promedio por mensaje: {avg_engagement:.4f}")
     print(f"  Engagement del root: {safe_float(root_row.get('engagementRate')):.4f}")
@@ -134,7 +134,7 @@ def show_root_impact(df: pd.DataFrame, root_id: str, propagation_data: dict):
         print(f"  Factor de amplificación: {amplification:.2f}x")
     
     # Análisis de impacto del contenido del root
-    print(f"\n🔄 IMPACTO DEL CONTENIDO DEL ROOT:")
+    print(f"\nIMPACTO DEL CONTENIDO DEL ROOT:")
     print(f"  Similitud promedio con replies: {summary.get('avg_content_overlap', 0):.2%}")
     
     # Calcular distribución de overlap
@@ -148,7 +148,7 @@ def show_root_impact(df: pd.DataFrame, root_id: str, propagation_data: dict):
             print(f"  Overlap mínimo (top replies): {min_overlap:.2%}")
     
     # Engagement e Influence del root
-    print(f"\n⭐ MÉTRICAS DEL ROOT:")
+    print(f"\nMÉTRICAS DEL ROOT:")
     print(f"  Engagement Rate: {safe_float(root_row.get('engagementRate')):.4f}")
     print(f"  Influence Score: {safe_float(root_row.get('influenceScore')):.4f}")
     
@@ -156,7 +156,7 @@ def show_root_impact(df: pd.DataFrame, root_id: str, propagation_data: dict):
     if top_replies:
         avg_reply_engagement = sum(r.get('engagementRate', 0) for r in top_replies) / len(top_replies)
         avg_reply_influence = sum(r.get('influenceScore', 0) for r in top_replies) / len(top_replies)
-        print(f"\n📊 COMPARACIÓN ROOT vs REPLIES (top 5):")
+        print(f"\nCOMPARACIÓN ROOT vs REPLIES (top 5):")
         print(f"  Engagement - Root: {safe_float(root_row.get('engagementRate')):.4f} | Avg Replies: {avg_reply_engagement:.4f}")
         print(f"  Influence - Root: {safe_float(root_row.get('influenceScore')):.4f} | Avg Replies: {avg_reply_influence:.4f}")
     
@@ -235,11 +235,11 @@ def demo_propagation_from_message_id(message_id: str, df: pd.DataFrame = None):
     print(f"VERIFICACIÓN DE ROOT ID")
     print(f"{'='*80}")
     print(f"Message ID: {message_id}")
-    print(f"¿Es root válido?: {'✅ SÍ' if is_root else '❌ NO'}")
+    print(f"¿Es root válido?: {'SÍ' if is_root else 'NO'}")
     print(f"Razón: {reason}")
     
     if not is_root:
-        print(f"\n⚠️  ADVERTENCIA: Este mensaje no es un root válido.")
+        print(f"\nADVERTENCIA: Este mensaje no es un root válido.")
         response = input("¿Deseas continuar de todos modos? (s/n): ").strip().lower()
         if response not in ['s', 'si', 'sí', 'y', 'yes']:
             print("Operación cancelada.")
@@ -318,7 +318,7 @@ def interactive_mode(df: pd.DataFrame):
     
     # Mostrar threads más activos
     thread_counts = df.groupby("threadId").size().sort_values(ascending=False).head(10)
-    print("\n📊 Top 10 threads más activos:")
+    print("\nTop 10 threads más activos:")
     for i, (thread_id, count) in enumerate(thread_counts.items(), 1):
         print(f"  {i}. Thread {thread_id}: {count} mensajes")
     
@@ -328,7 +328,7 @@ def interactive_mode(df: pd.DataFrame):
     df_copy["parentId_str"] = df_copy["parentId"].astype(str).str.strip().str.lower()
     potential_roots = df_copy[df_copy["parentId_str"].isin(no_parent_tokens)]
     
-    print(f"\n📝 Hay {len(potential_roots)} mensajes sin parent en el dataset (posibles roots)")
+    print(f"\nHay {len(potential_roots)} mensajes sin parent en el dataset (posibles roots)")
     print("\nAlgunos ejemplos de posibles roots:")
     for i, (_, row) in enumerate(potential_roots.head(5).iterrows(), 1):
         text_preview = str(row.get('text', 'N/A'))[:60]
@@ -340,10 +340,10 @@ def interactive_mode(df: pd.DataFrame):
     
     # Solicitar ID del usuario
     print("="*80)
-    message_id = input("\n🔍 Ingresa el ID del mensaje que deseas analizar como root: ").strip()
+    message_id = input("\nIngresa el ID del mensaje que deseas analizar como root: ").strip()
     
     if not message_id:
-        print("❌ No se proporcionó ningún ID. Operación cancelada.")
+        print("No se proporcionó ningún ID. Operación cancelada.")
         return
     
     # Ejecutar análisis
