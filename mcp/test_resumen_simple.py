@@ -1,57 +1,57 @@
 """
 Test simple para el endpoint de resumen conversacional.
-Prueba con datos de ejemplo sin necesidad de cargar el parquet.
+Carga una conversación real del dataset y la envía al endpoint.
 """
 import requests
 import json
+import pandas as pd
 
 RESUMEN_ENDPOINT = "http://localhost:8000/api/v1/analysis/resumen"
+PARQUET_PATH = "../data/reto.parquet"
+
+
+def load_real_conversation():
+    """Carga una conversación real del dataset."""
+    print("Cargando dataset...")
+    df = pd.read_parquet(PARQUET_PATH, engine='fastparquet')
+    
+    # Encontrar el thread más activo
+    thread_counts = df.groupby("threadId").size().sort_values(ascending=False)
+    top_thread_id = thread_counts.index[0]
+    
+    print(f"Thread más activo: {top_thread_id} con {thread_counts.iloc[0]} mensajes")
+    
+    # Tomar el thread y ordenar por fecha
+    df_thread = df[df["threadId"] == top_thread_id].copy()
+    df_thread = df_thread.sort_values("createdAt")
+    
+    # Tomar los primeros 8 mensajes
+    messages_sample = df_thread.head(8)
+    
+    messages = []
+    for _, row in messages_sample.iterrows():
+        text = str(row.get('text', '')) if pd.notna(row.get('text')) else ''
+        author = str(row.get('author', 'Anónimo')) if pd.notna(row.get('author')) else 'Anónimo'
+        created = pd.to_datetime(row['createdAt'], unit='ms', utc=True).isoformat()
+        msg_id = str(row['id'])
+        
+        messages.append({
+            "id": msg_id,
+            "text": text,
+            "createdAt": created,
+            "author": author
+        })
+    
+    return {
+        "threadId": str(top_thread_id),
+        "messages": messages
+    }
 
 
 def test_resumen_simple():
-    """Prueba básica con conversación de ejemplo."""
+    """Prueba básica con conversación real del dataset."""
     
-    payload = {
-        "threadId": "test_thread_001",
-        "messages": [
-            {
-                "id": "msg1",
-                "text": "El gobierno ha anunciado una reforma laboral que elimina los lunes festivos del calendario. Esta medida ha generado gran controversia.",
-                "createdAt": "2025-06-25T10:00:00Z",
-                "author": "NoticiasColombia"
-            },
-            {
-                "id": "msg2",
-                "text": "Esto es un ataque directo a los trabajadores! No podemos permitir que nos quiten nuestros derechos. Es hora de protestar!",
-                "createdAt": "2025-06-25T10:05:00Z",
-                "author": "TrabajadorColombia"
-            },
-            {
-                "id": "msg3",
-                "text": "Finalmente una reforma que aumenta la productividad. Los festivos entre semana solo perjudican la economía.",
-                "createdAt": "2025-06-25T10:10:00Z",
-                "author": "EmpresarioCO"
-            },
-            {
-                "id": "msg4",
-                "text": "Esta información es FALSA. He verificado en fuentes oficiales y no existe tal reforma. Cuidado con la desinformación.",
-                "createdAt": "2025-06-25T10:15:00Z",
-                "author": "FactChecker"
-            },
-            {
-                "id": "msg5",
-                "text": "Ya sea cierto o no, el gobierno siempre busca formas de perjudicar al pueblo. Petro tiene que renunciar YA!",
-                "createdAt": "2025-06-25T10:20:00Z",
-                "author": "OpositoresCO"
-            },
-            {
-                "id": "msg6",
-                "text": "Siempre lo mismo... polarización y fake news. Necesitamos verificar antes de opinar con odio.",
-                "createdAt": "2025-06-25T10:25:00Z",
-                "author": "CiudadanoPensante"
-            }
-        ]
-    }
+    payload = load_real_conversation()
     
     print("=" * 80)
     print("TEST: Endpoint de Resumen Conversacional")
