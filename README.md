@@ -1,4 +1,4 @@
-Reto Atinna – Conversational Agent + MCP Microservices
+Conversational Agent + MCP Microservices
 =====================================================
 
 This repository contains a conversational analysis system composed of:
